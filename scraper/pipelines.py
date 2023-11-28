@@ -16,11 +16,12 @@ class JobPipeline:
         adapter = ItemAdapter(item)
         try:
             job, created = Job.objects.get_or_create(
-                title=adapter['title'],
-                company=adapter['company'],
-                defaults={'url': adapter['url']}
+                date=adapter["date_posted"],
+                title=adapter["title"],
+                company=adapter["company"],
+                defaults={"url": adapter["url"]}
             )
-            for tech in adapter.get('technologies', []):
+            for tech in adapter.get("technologies", []):
                 technology, _ = Technology.objects.get_or_create(name=tech)
                 job.technologies.add(technology)
             return item

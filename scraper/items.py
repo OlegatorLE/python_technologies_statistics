@@ -7,6 +7,7 @@ import scrapy
 
 
 class JobItem(scrapy.Item):
+    date_posted = scrapy.Field()
     title = scrapy.Field()
     company = scrapy.Field()
     url = scrapy.Field()
