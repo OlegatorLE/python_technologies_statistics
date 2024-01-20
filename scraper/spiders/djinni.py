@@ -98,15 +98,22 @@ class DjinniSpider(scrapy.Spider):
 
     def _parse_date_posted(self, response: Response) -> str:
         date_text = response.css("p.text-muted").extract_first()
-        date_posted = (
-            date_text.split("Вакансія опублікована")[-1]
-            .strip()
-            .split("<br>")[0]
-            .strip()
-        )
-        if "січня" in date_posted or "лютого" in date_posted:
+        if "Вакансія" in date_text:
+            date_posted = (
+                date_text.split("Вакансія опублікована")[-1]
+                .strip()
+                .split("<br>")[0]
+                .strip()
+            )
+
             return self._translate_month_ua_to_en(date_posted)
         else:
+            date_posted = (
+                date_text.split("Job posted on")[-1]
+                .strip()
+                .split("<br>")[0]
+                .strip()
+            )
             date_object = datetime.strptime(date_posted, '%d %B %Y')
             return date_object.strftime('%Y-%m-%d')
 
