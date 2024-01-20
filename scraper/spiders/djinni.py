@@ -1,20 +1,27 @@
-import locale
-from datetime import datetime, date
-from typing import Generator
+import re
+from datetime import datetime
+from typing import Generator, List
 
 import scrapy
-import config
 from scrapy.http import Response
-from babel.dates import format_date, parse_date
 
+import config
 from scraper.items import JobItem
-from scraper.clean_technologies import clean_technologies
 
 
 class DjinniSpider(scrapy.Spider):
     name = "djinni"
     allowed_domains = ["djinni.co"]
-    start_urls = ["https://djinni.co/jobs/?primary_keyword=Python"]
+
+    def __init__(self, technologies: List[str] = None, *args, **kwargs):
+        super(DjinniSpider, self).__init__(*args, **kwargs)
+        if technologies is None or not isinstance(technologies, list):
+            raise ValueError("Technologies should be a list")
+        self.start_urls = [self.create_url(tech) for tech in technologies]
+
+    @staticmethod
+    def create_url(technology: str) -> str:
+        return f"https://djinni.co/jobs/?primary_keyword={technology}"
 
     def parse(self, response: Response, **kwargs) -> Generator[
         scrapy.Request, None, None
@@ -41,21 +48,51 @@ class DjinniSpider(scrapy.Spider):
         company = response.css(
             ".job-details--title::text"
         ).get().replace("\n", " ").strip()
+        english = self._parse_english_level(response)
+        experience = self._parse_years_of_experience(response)
         yield JobItem(
             title=title,
             date_posted=date_posted,
             company=company,
             url=response.url,
+            english=english,
+            experience=experience,
             technologies=technologies
         )
+
+    @staticmethod
+    def _parse_years_of_experience(response: Response) -> int:
+        for job_info in response.css(".job-additional-info--item"):
+            experience_text = job_info.css(
+                ".job-additional-info--item-text::text").get()
+
+            if experience_text:
+                match = re.search(r"(\d+)\s+(?:рік|роки|років)",
+                                  experience_text)
+                if match:
+                    return match.group(1)
+
+        return 0
+
+    @staticmethod
+    def _parse_english_level(response: Response):
+        english = "Not Specified"
+        for job_info in response.css(".job-additional-info--item"):
+            english_level_text = job_info.css(
+                ".job-additional-info--item-text::text").get()
+            if english_level_text and "Англійська" in english_level_text:
+                english = english_level_text.split(":")[-1].strip()
+                break
+        return english
 
     @staticmethod
     def _parse_technology_from_description(response: Response) -> list:
         desc = response.css(".row-mobile-order-2 ::text").getall()
         desc_text = " ".join(desc)
         technologies_found = [
-            tech for tech in config.allowed_technologies
-            if tech.lower() in desc_text.lower()
+            tech for tech in config.allowed_technologies_python
+            if re.search(r'\b{}\b'.format(re.escape(tech)), desc_text,
+                         re.IGNORECASE)
         ]
         return technologies_found
 
@@ -85,13 +122,13 @@ class DjinniSpider(scrapy.Spider):
             'листопада': '11',
             'грудня': '12'
         }
+
         for ua_month, en_month in months_ua_to_en.items():
             if ua_month in date_posted:
                 date_posted = date_posted.replace(ua_month, en_month)
                 break
 
         date_object = datetime.strptime(date_posted, '%d %m %Y')
-
-        date_posted = format_date(date_object, locale="en")
+        date_posted = date_object.strftime('%Y-%m-%d')
 
         return date_posted

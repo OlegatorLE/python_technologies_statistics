@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Аналітика</title>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.3.1.min.js"></script>
+  {{ script|safe }}
+  {{ script2|safe }}
+  {{ script3|safe }}
+  {{ script_junior|safe }}
+  {{ script_middle|safe }}
+  {{ script_senior|safe }}
+
+  <script>
+      function showGraph(graphNumber) {
+          document.getElementById('graph1').style.display = 'none';
+          document.getElementById('graph2').style.display = 'none';
+          document.getElementById('graph3').style.display = 'none';
+          document.getElementById('graph4').style.display = 'none';
+          document.getElementById('graph5').style.display = 'none';
+          document.getElementById('graph6').style.display = 'none';
+
+          document.getElementById('graph' + graphNumber).style.display = 'block';
+      }
+  </script>
+</head>
+
+<body>
+<div style="display: flex; align-items: center;">
+  <form method="get" action=".">
+    <button type="button" onclick="showGraph(1)">Кількість вакансій по дням</button>
+    <input type="number" id="min_vacancies" name="min_vacancies" min="1"
+           value="{{ request.GET.min_vacancies|default_if_none:'3' }}" style="width: 30px;">
+    <button type="submit">Оновити</button>
+  </form>
+  <button onclick="showGraph(2)">Рівень Англійської</button>
+  <button onclick="showGraph(3)">Рівень Досвіду</button>
+  <br>
+</div>
+<hr>
+<div>Технології для:</div>
+<button onclick="showGraph(4)">Junior</button>
+<button onclick="showGraph(5)">Middle</button>
+<button onclick="showGraph(6)">Senior</button>
+
+
+<div id="graph1" style="display: none;">
+  {{ div|safe }}
+</div>
+<div id="graph2" style="display: none;">
+  {{ div2|safe }}
+</div>
+<div id="graph3" style="display: none;">
+  {{ div3|safe }}
+</div>
+<div id="graph4" style="display: none;">
+  {{ div_junior|safe }}
+</div>
+<div id="graph5" style="display: none;">
+  {{ div_middle|safe }}
+</div>
+<div id="graph6" style="display: none;">
+  {{ div_senior|safe }}
+</div>
+<script>
+    function checkParametersAndShowGraph() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const minVacancies = urlParams.get('min_vacancies');
+        if (minVacancies) {
+            showGraph(1);
+        }
+    }
+        window.onload = checkParametersAndShowGraph;
+
+</script>
+</body>
+</html>

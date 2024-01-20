@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:14-alpine
+    ports:
+      - 5434:5432
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/statistics
+      - python-deps:/statistics/venv
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  celery:
+    build: .
+    command: celery -A python_technologies_statistics worker --loglevel=info --max-tasks-per-child=1
+    environment:
+      - REDIS_URL=${REDIS_URL}
+    depends_on:
+      - web
+      - redis
+    volumes:
+      - .:/statistics
+
+  redis:
+    image: "redis:alpine"
+
+  celerybeat:
+      build: .
+      command: celery -A python_technologies_statistics beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+      depends_on:
+        - web
+        - redis
+      volumes:
+        - .:/statistics
+
+volumes:
+  python-deps:

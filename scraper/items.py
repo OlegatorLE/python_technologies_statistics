@@ -11,4 +11,6 @@ class JobItem(scrapy.Item):
     title = scrapy.Field()
     company = scrapy.Field()
     url = scrapy.Field()
+    english = scrapy.Field()
+    experience = scrapy.Field()
     technologies = scrapy.Field()
