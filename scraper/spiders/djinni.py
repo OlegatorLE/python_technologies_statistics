@@ -104,7 +104,11 @@ class DjinniSpider(scrapy.Spider):
             .split("<br>")[0]
             .strip()
         )
-        return self._translate_month_ua_to_en(date_posted)
+        if "січня" in date_posted or "лютого" in date_posted:
+            return self._translate_month_ua_to_en(date_posted)
+        else:
+            date_object = datetime.strptime(date_posted, '%d %B %Y')
+            return date_object.strftime('%Y-%m-%d')
 
     @staticmethod
     def _translate_month_ua_to_en(date_posted: str) -> str:
