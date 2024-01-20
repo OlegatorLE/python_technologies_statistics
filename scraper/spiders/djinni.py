@@ -31,6 +31,9 @@ class DjinniSpider(scrapy.Spider):
             yield scrapy.Request(
                 url=response.urljoin(details_url),
                 callback=self._parse_job_details,
+                headers={
+                    'Accept-Language': 'uk-UA,uk;q=0.9,en;q=0.8',
+                }
             )
 
         next_page = response.css(
