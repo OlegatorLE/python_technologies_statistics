@@ -7,9 +7,9 @@ services:
     volumes:
       - ./data/db:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: statistics
+      POSTGRES_USER: postgres_admin
+      POSTGRES_PASSWORD: qazwsx123!
 
   web:
     build: .
